@@ -1,0 +1,1704 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>數感裝修隊：磁磚密鋪與最佳成本決策</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- QRCode JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <!-- html2canvas for High-Res PNG Export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;600;700;900&display=swap');
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: #f8fafc;
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        .touch-btn {
+            min-height: 48px;
+            min-width: 48px;
+        }
+        .canvas-shadow {
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between text-slate-800 select-none bg-slate-50">
+
+    <!-- Top Header Bar -->
+    <header class="bg-indigo-700 text-white shadow-lg sticky top-0 z-30">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+            <!-- Brand, Version Badge & Group Info -->
+            <div class="flex items-center space-x-3">
+                <div class="bg-amber-400 text-indigo-950 font-extrabold p-2.5 rounded-xl shadow-md text-xl flex items-center justify-center">
+                    <i class="fa-solid fa-ruler-combined"></i>
+                </div>
+                <div>
+                    <div class="flex items-center space-x-2">
+                        <h1 class="text-xl md:text-2xl font-black tracking-wide leading-tight">數感裝修隊</h1>
+                        <!-- Version Control Badge directly next to Title -->
+                        <span id="versionBadge" class="bg-amber-400 text-indigo-950 font-black text-xs md:text-sm px-2.5 py-0.5 rounded-full shadow-sm">
+                            v1.4.0
+                        </span>
+                    </div>
+                    <p class="text-xs md:text-sm text-indigo-200 font-medium">24×36 牆面密鋪與公因數工程決策</p>
+                </div>
+            </div>
+
+            <!-- Student Group ID Input -->
+            <div class="flex items-center bg-indigo-800/90 px-3 py-1.5 rounded-xl border-2 border-amber-400 shadow-md text-sm">
+                <i class="fa-solid fa-user-group text-amber-300 mr-2 text-base"></i>
+                <span class="text-indigo-200 font-bold mr-1.5 whitespace-nowrap text-base">小組：</span>
+                <input type="text" id="groupNameInput" value="第 1 組" class="bg-indigo-900/90 text-amber-300 font-black text-lg px-2 py-1 rounded-lg w-28 border border-indigo-400 focus:outline-none focus:ring-2 focus:ring-amber-400 text-center" onchange="updateGroupIdentity()" oninput="updateGroupIdentity()">
+            </div>
+
+            <!-- Action Buttons (Strictly Icons Only, No Text Labels) -->
+            <div class="flex items-center space-x-2 md:space-x-3">
+                <!-- QR Code Modal Button -->
+                <button onclick="openModal('qrModal')" title="QR Code 掃碼連結" class="touch-btn bg-indigo-600 hover:bg-indigo-500 text-white p-3 rounded-xl shadow transition transform active:scale-95 flex items-center justify-center">
+                    <i class="fa-solid fa-qrcode text-xl"></i>
+                </button>
+                
+                <!-- Fullscreen Toggle Button -->
+                <button onclick="toggleFullscreen()" id="fullscreenBtn" title="全螢幕切換" class="touch-btn bg-indigo-600 hover:bg-indigo-500 text-white p-3 rounded-xl shadow transition transform active:scale-95 flex items-center justify-center">
+                    <i class="fa-solid fa-expand text-xl"></i>
+                </button>
+
+                <!-- Course Instructions Button (課程設計說明) -->
+                <button onclick="openModal('guideModal')" title="課程設計說明" class="touch-btn bg-indigo-600 hover:bg-indigo-500 text-white p-3 rounded-xl shadow transition transform active:scale-95 flex items-center justify-center">
+                    <i class="fa-solid fa-compass text-xl"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Navigation Tabs (Streamlined to 4 Tabs) -->
+    <nav class="bg-white border-b border-slate-200 shadow-sm sticky top-[68px] z-20">
+        <div class="max-w-7xl mx-auto px-4 flex justify-around md:justify-center md:space-x-6 overflow-x-auto py-1">
+            <button onclick="switchTab('act1')" id="tab-act1" class="tab-btn py-3 px-3 md:px-5 font-black text-base md:text-lg border-b-4 border-indigo-600 text-indigo-600 flex items-center space-x-2 transition whitespace-nowrap">
+                <i class="fa-solid fa-cubes text-lg md:text-xl"></i>
+                <span>活動一：試鋪探索</span>
+            </button>
+            <button onclick="switchTab('act2')" id="tab-act2" class="tab-btn py-3 px-3 md:px-5 font-black text-base md:text-lg border-b-4 border-transparent text-slate-500 hover:text-indigo-600 flex items-center space-x-2 transition whitespace-nowrap">
+                <i class="fa-solid fa-calculator text-lg md:text-xl"></i>
+                <span>活動二：工程決策</span>
+            </button>
+            <button onclick="switchTab('act_game')" id="tab-act_game" class="tab-btn py-3 px-3 md:px-5 font-black text-base md:text-lg border-b-4 border-transparent text-slate-500 hover:text-indigo-600 flex items-center space-x-2 transition whitespace-nowrap">
+                <i class="fa-solid fa-stopwatch-20 text-rose-500 text-lg md:text-xl"></i>
+                <span>挑戰賽：1分鐘速判</span>
+            </button>
+            <button onclick="switchTab('act4')" id="tab-act4" class="tab-btn py-3 px-3 md:px-5 font-black text-base md:text-lg border-b-4 border-transparent text-slate-500 hover:text-indigo-600 flex items-center space-x-2 transition whitespace-nowrap relative">
+                <i class="fa-solid fa-award text-amber-500 text-lg md:text-xl"></i>
+                <span>成果展示牆</span>
+                <span id="showcaseCountBadge" class="bg-indigo-600 text-white text-xs font-black px-2 py-0.5 rounded-full ml-1">0</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Main Interactive Container -->
+    <main class="max-w-7xl mx-auto px-4 py-6 flex-1 w-full space-y-6">
+
+        <!-- Group Setup Guidance Banner -->
+        <div class="bg-amber-100 border-2 border-amber-400 rounded-2xl p-4 shadow-sm flex items-center space-x-3 text-amber-950 font-extrabold text-lg md:text-xl">
+            <div class="bg-amber-400 text-indigo-950 p-2.5 rounded-xl font-black text-2xl flex-shrink-0">
+                <i class="fa-solid fa-hand-point-up animate-bounce"></i>
+            </div>
+            <div>
+                <span class="font-black text-amber-900">【開始任務前提醒】</span>
+                <span>裝修隊員請先點擊頂端欄位的 <span class="bg-indigo-800 text-amber-300 px-2.5 py-1 rounded-lg border border-amber-400 font-black inline-flex items-center"><i class="fa-solid fa-user-group text-amber-300 mr-1.5 text-base"></i>小組</span>，輸入或修改為貴隊的組別（如：第 3 組）喔！</span>
+            </div>
+        </div>
+
+        <!-- ==================== ACTIVITY 1 ==================== -->
+        <section id="act1" class="tab-content space-y-6">
+            <!-- Task Banner -->
+            <div class="bg-indigo-50 border-2 border-indigo-200 rounded-2xl p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                <div class="space-y-1">
+                    <span class="bg-indigo-600 text-white font-bold text-base px-4 py-1.5 rounded-full">任務 1：找尋可剛好填滿的正方形</span>
+                    <h2 class="text-2xl md:text-3xl font-black text-indigo-950">長方形牆面：高 24 單位 × 寬 36 單位</h2>
+                    <p class="text-xl text-indigo-800 font-bold">請滑動下方拉桿調整正方形磁磚邊長，觀察是否能「完全填滿、不重疊、不裁剪」！</p>
+                </div>
+                <div class="flex items-center space-x-2 self-end md:self-auto">
+                    <span class="text-lg font-bold text-slate-600">目前測試紀錄：</span>
+                    <span id="trialsCountBadge" class="bg-amber-400 text-slate-900 font-extrabold text-2xl px-4 py-1.5 rounded-xl shadow">0 次</span>
+                </div>
+            </div>
+
+            <!-- Main Work Area: Grid Simulator & Control Panel -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <!-- Left: Canvas Grid Interactive View -->
+                <div class="lg:col-span-8 bg-white p-4 md:p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-col items-center">
+                    <div class="w-full flex justify-between items-center mb-3">
+                        <div class="flex items-center space-x-2">
+                            <span class="w-4 h-4 bg-emerald-500 rounded-full inline-block"></span>
+                            <span class="text-lg font-bold text-slate-700">互動擬真牆面 (36×24 網格)</span>
+                        </div>
+                        <span id="canvasFitStatus" class="font-extrabold text-lg md:text-xl px-4 py-1.5 rounded-xl bg-slate-100 text-slate-600">
+                            未選取尺寸
+                        </span>
+                    </div>
+
+                    <!-- Wall Canvas Container -->
+                    <div class="relative w-full overflow-hidden bg-slate-900 rounded-xl p-2 flex justify-center items-center canvas-shadow">
+                        <canvas id="wallCanvas" class="max-w-full h-auto rounded border-2 border-slate-700 bg-slate-800 cursor-pointer"></canvas>
+                    </div>
+
+                    <!-- Canvas Interactive Tip -->
+                    <div class="mt-4 flex flex-col md:flex-row items-center justify-between w-full text-base text-slate-600 font-bold gap-2">
+                        <span><i class="fa-solid fa-info-circle text-indigo-500 mr-1"></i>綠/藍色：密鋪無縫隙 | 紅色：邊界溢出或無法整除</span>
+                        <span id="dimensionLabel" class="font-black text-indigo-700 text-lg">牆面總面積：864 平方單位</span>
+                    </div>
+                </div>
+
+                <!-- Right: Slider Control & Mathematical Analysis Card -->
+                <div class="lg:col-span-4 space-y-5">
+                    <!-- Tile Size Control Card (Slider Only) -->
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-5">
+                        <h3 class="text-2xl font-black text-slate-800 flex items-center">
+                            <i class="fa-solid fa-sliders text-indigo-600 mr-2 text-3xl"></i>微調磁磚邊長
+                        </h3>
+
+                        <!-- Prominent Slider -->
+                        <div class="space-y-4 pt-2">
+                            <div class="flex justify-between items-center bg-indigo-50 p-4 rounded-xl border border-indigo-100">
+                                <label for="tileSizeSlider" class="text-xl font-black text-slate-800">磁磚邊長：</label>
+                                <div class="flex items-baseline space-x-1">
+                                    <span id="tileSizeDisplay" class="text-4xl font-black text-indigo-600">1</span>
+                                    <span class="text-lg font-bold text-slate-600">單位</span>
+                                </div>
+                            </div>
+                            
+                            <input type="range" id="tileSizeSlider" min="1" max="24" value="1" class="w-full h-6 bg-slate-200 rounded-xl appearance-none cursor-pointer accent-indigo-600 touch-btn" oninput="onSliderChange(this.value)">
+                            
+                            <div class="flex justify-between text-xs font-bold text-slate-400 px-1">
+                                <span>1 (最小)</span>
+                                <span>12</span>
+                                <span>24 (最大)</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Mathematical Logic Analysis Card -->
+                    <div id="mathAnalysisCard" class="bg-indigo-900 text-white p-6 rounded-2xl shadow-md space-y-4">
+                        <h4 class="text-xl font-black text-amber-300 border-b border-indigo-700 pb-3 flex items-center">
+                            <i class="fa-solid fa-square-root-variable mr-2"></i>整除性與因數分析
+                        </h4>
+                        <div class="space-y-3 text-lg">
+                            <div class="flex justify-between items-center">
+                                <span>寬 (36) 除以邊長：</span>
+                                <span id="widthDivResult" class="font-extrabold text-2xl text-amber-200">36 ÷ 1 = 36</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span>高 (24) 除以邊長：</span>
+                                <span id="heightDivResult" class="font-extrabold text-2xl text-amber-200">24 ÷ 1 = 24</span>
+                            </div>
+                            <div class="flex justify-between items-center pt-3 border-t border-indigo-800">
+                                <span class="font-bold">公因數判斷：</span>
+                                <span id="isCommonFactorBadge" class="px-3 py-1 rounded-full text-base font-black bg-emerald-500 text-white">是公因數</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="font-bold">所需磁磚總數：</span>
+                                <span id="totalTilesCount" class="text-3xl font-black text-amber-300">864 塊</span>
+                            </div>
+                        </div>
+
+                        <!-- Record Test Button -->
+                        <button onclick="recordCurrentTrial()" class="w-full mt-4 bg-amber-400 hover:bg-amber-300 text-indigo-950 font-black text-xl py-3.5 rounded-xl shadow-md transition transform active:scale-95 flex items-center justify-center space-x-2">
+                            <i class="fa-solid fa-bookmark text-2xl"></i>
+                            <span>記錄此尺寸測試</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Trial History Table -->
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-4">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-2xl font-black text-slate-800 flex items-center">
+                        <i class="fa-solid fa-list-check text-indigo-600 mr-2"></i>試鋪觀察紀錄表
+                    </h3>
+                    <button onclick="clearTrialsHistory()" class="text-base font-bold text-rose-600 hover:text-rose-700 px-4 py-2 rounded-xl bg-rose-50 border border-rose-200">
+                        <i class="fa-solid fa-trash mr-1"></i>清除紀錄
+                    </button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-lg border-collapse">
+                        <thead>
+                            <tr class="bg-slate-100 text-slate-700 border-b border-slate-200 font-black">
+                                <th class="p-3.5">磁磚邊長</th>
+                                <th class="p-3.5">寬 (36) 整除？</th>
+                                <th class="p-3.5">高 (24) 整除？</th>
+                                <th class="p-3.5">是否為公因數？</th>
+                                <th class="p-3.5">所需數量</th>
+                                <th class="p-3.5">鋪設結果</th>
+                            </tr>
+                        </thead>
+                        <tbody id="trialLogTableBody" class="divide-y divide-slate-100 font-extrabold">
+                            <tr id="emptyTrialRow">
+                                <td colspan="6" class="text-center py-8 text-slate-400 font-bold text-xl">
+                                    尚未進行任何磁磚試鋪測試，請調整拉桿開始測試！
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== ACTIVITY 2 ==================== -->
+        <section id="act2" class="tab-content hidden space-y-6">
+            <!-- Banner -->
+            <div class="bg-emerald-50 border-2 border-emerald-200 rounded-2xl p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                <div class="space-y-1">
+                    <span class="bg-emerald-600 text-white font-bold text-base px-4 py-1.5 rounded-full">任務 2：工程真實限制與最佳成本決策</span>
+                    <h2 class="text-2xl md:text-3xl font-black text-emerald-950">工程決策：尋找「零廢棄」且「成本最低」的最佳方案</h2>
+                    <p class="text-xl text-emerald-800 font-bold">工程提示：磁磚越小，數量越多，施工與人工灌漿費用隨之暴增！邊長無法整除會產生違約罰金！</p>
+                </div>
+            </div>
+
+            <!-- Cost Rules Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center space-x-4">
+                    <div class="bg-indigo-100 text-indigo-700 p-4 rounded-2xl font-bold text-3xl"><i class="fa-solid fa-boxes-packing"></i></div>
+                    <div>
+                        <div class="text-base font-bold text-slate-500">磁磚材料費 (總面積 864)</div>
+                        <div class="text-2xl font-black text-slate-800">$8,640 元 <span class="text-sm font-normal text-slate-500">(10元/單位)</span></div>
+                    </div>
+                </div>
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center space-x-4">
+                    <div class="bg-amber-100 text-amber-700 p-4 rounded-2xl font-bold text-3xl"><i class="fa-solid fa-person-digging"></i></div>
+                    <div>
+                        <div class="text-base font-bold text-slate-500">人工與灌漿費</div>
+                        <div class="text-2xl font-black text-amber-600">$150 元 / 每塊磁磚</div>
+                    </div>
+                </div>
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center space-x-4">
+                    <div class="bg-rose-100 text-rose-700 p-4 rounded-2xl font-bold text-3xl"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                    <div>
+                        <div class="text-base font-bold text-slate-500">切割與廢料處置罰金</div>
+                        <div class="text-2xl font-black text-rose-600">$5,000 元 <span class="text-sm font-normal text-slate-500">(無法整除時)</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Interactive Size Experimenter (2, 3, 4, 5, 6, 12) -->
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-5">
+                <h3 class="text-2xl font-black text-slate-800 flex items-center">
+                    <i class="fa-solid fa-vial-circle-check text-emerald-600 mr-2 text-3xl"></i>點擊測試重點尺寸 (2, 3, 4, 5, 6, 12)
+                </h3>
+                <p class="text-lg font-bold text-slate-600">觀察邊長 5 是否會產生溢出，並比較不同尺寸的工程費用總額：</p>
+
+                <!-- Interactive Test Buttons -->
+                <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+                    <button onclick="selectAct2Size(2)" class="act2-size-btn p-4 rounded-2xl border-2 border-slate-200 bg-slate-50 hover:bg-emerald-50 text-center font-black transition" data-act2-size="2">
+                        <div class="text-2xl text-slate-800">2 × 2</div>
+                        <div class="text-sm text-slate-500 mt-1">需 216 塊</div>
+                    </button>
+                    <button onclick="selectAct2Size(3)" class="act2-size-btn p-4 rounded-2xl border-2 border-slate-200 bg-slate-50 hover:bg-emerald-50 text-center font-black transition" data-act2-size="3">
+                        <div class="text-2xl text-slate-800">3 × 3</div>
+                        <div class="text-sm text-slate-500 mt-1">需 96 塊</div>
+                    </button>
+                    <button onclick="selectAct2Size(4)" class="act2-size-btn p-4 rounded-2xl border-2 border-slate-200 bg-slate-50 hover:bg-emerald-50 text-center font-black transition" data-act2-size="4">
+                        <div class="text-2xl text-slate-800">4 × 4</div>
+                        <div class="text-sm text-slate-500 mt-1">需 54 塊</div>
+                    </button>
+                    <button onclick="selectAct2Size(5)" class="act2-size-btn p-4 rounded-2xl border-2 border-rose-300 bg-rose-50 hover:bg-rose-100 text-center font-black transition" data-act2-size="5">
+                        <div class="text-2xl text-rose-900">5 × 5</div>
+                        <div class="text-sm text-rose-600 mt-1">邊界溢出！</div>
+                    </button>
+                    <button onclick="selectAct2Size(6)" class="act2-size-btn p-4 rounded-2xl border-2 border-slate-200 bg-slate-50 hover:bg-emerald-50 text-center font-black transition" data-act2-size="6">
+                        <div class="text-2xl text-slate-800">6 × 6</div>
+                        <div class="text-sm text-slate-500 mt-1">需 24 塊</div>
+                    </button>
+                    <button onclick="selectAct2Size(12)" class="act2-size-btn p-4 rounded-2xl border-2 border-amber-300 bg-amber-50 hover:bg-amber-100 text-center font-black transition" data-act2-size="12">
+                        <div class="text-2xl text-amber-900">12 × 12</div>
+                        <div class="text-sm text-amber-700 mt-1">只需 6 塊！</div>
+                    </button>
+                </div>
+
+                <!-- Dynamic Calculation Detail Card -->
+                <div id="act2DetailBox" class="bg-slate-900 text-white p-6 rounded-2xl shadow-md space-y-4">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 border-b border-slate-700 pb-3">
+                        <div class="flex items-center space-x-3">
+                            <span id="act2SelectedSizeTitle" class="text-3xl font-black text-amber-400">目前選擇：12 × 12 磁磚</span>
+                            <span id="act2OverflowBadge" class="bg-emerald-500 text-white font-black text-base px-3 py-1 rounded-full">零廢棄 (完全整除)</span>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-slate-400 font-bold text-base">工程總費用：</span>
+                            <span id="act2TotalCostDisplay" class="text-3xl font-black text-emerald-400">$9,540 元</span>
+                        </div>
+                    </div>
+
+                    <!-- Cost Breakdown Grid -->
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                        <div class="bg-slate-800 p-3 rounded-xl">
+                            <div class="text-slate-400 text-sm font-bold">磁磚需求數量</div>
+                            <div id="act2TileCount" class="text-2xl font-black text-white">6 塊</div>
+                        </div>
+                        <div class="bg-slate-800 p-3 rounded-xl">
+                            <div class="text-slate-400 text-sm font-bold">材料費</div>
+                            <div id="act2MatCost" class="text-2xl font-black text-white">$8,640</div>
+                        </div>
+                        <div class="bg-slate-800 p-3 rounded-xl">
+                            <div class="text-slate-400 text-sm font-bold">人工灌漿費</div>
+                            <div id="act2LaborCost" class="text-2xl font-black text-amber-300">$900</div>
+                        </div>
+                        <div class="bg-slate-800 p-3 rounded-xl">
+                            <div class="text-slate-400 text-sm font-bold">廢料罰金</div>
+                            <div id="act2Penalty" class="text-2xl font-black text-emerald-400">$0</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Full Cost Matrix Table -->
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-4">
+                <h3 class="text-2xl font-black text-slate-800 flex items-center">
+                    <i class="fa-solid fa-table-cells text-emerald-600 mr-2"></i>各式磁磚尺寸之施工成本試算對照表
+                </h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse text-lg">
+                        <thead>
+                            <tr class="bg-slate-100 text-slate-700 border-b border-slate-200 font-black">
+                                <th class="p-3.5">磁磚尺寸</th>
+                                <th class="p-3.5">是否剛好鋪滿</th>
+                                <th class="p-3.5">所需數量</th>
+                                <th class="p-3.5">材料費</th>
+                                <th class="p-3.5">人工灌漿費</th>
+                                <th class="p-3.5">廢料罰金</th>
+                                <th class="p-3.5 text-xl">工程總費用</th>
+                            </tr>
+                        </thead>
+                        <tbody id="costMatrixTableBody" class="divide-y divide-slate-100 font-bold">
+                            <!-- Populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Final Engineering Decision Box -->
+            <div class="bg-amber-50 border-2 border-amber-300 p-6 rounded-2xl shadow-md space-y-5">
+                <h3 class="text-2xl font-black text-amber-950 flex items-center">
+                    <i class="fa-solid fa-trophy text-amber-600 mr-2"></i>【數感裝修隊】團隊工程決策
+                </h3>
+                <p class="text-xl text-amber-900 font-extrabold">請小組討論：依據上方成本試算對照表，為了兼顧「零廢棄」且「總施工成本最低」，貴隊選擇哪一種磁磚邊長？</p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <label class="cursor-pointer border-2 border-amber-200 bg-white hover:border-amber-500 rounded-2xl p-5 flex items-center space-x-4 transition">
+                        <input type="radio" name="engineeringChoice" value="1" class="w-6 h-6 text-indigo-600 focus:ring-indigo-500">
+                        <div>
+                            <div class="font-black text-2xl text-slate-800">1×1 磁磚</div>
+                            <div class="text-base font-bold text-slate-500">邊長：1 單位</div>
+                        </div>
+                    </label>
+                    <label class="cursor-pointer border-2 border-amber-200 bg-white hover:border-amber-500 rounded-2xl p-5 flex items-center space-x-4 transition">
+                        <input type="radio" name="engineeringChoice" value="6" class="w-6 h-6 text-indigo-600 focus:ring-indigo-500">
+                        <div>
+                            <div class="font-black text-2xl text-slate-800">6×6 磁磚</div>
+                            <div class="text-base font-bold text-slate-500">邊長：6 單位</div>
+                        </div>
+                    </label>
+                    <label class="cursor-pointer border-2 border-amber-200 bg-white hover:border-amber-500 rounded-2xl p-5 flex items-center space-x-4 transition">
+                        <input type="radio" name="engineeringChoice" value="12" class="w-6 h-6 text-indigo-600 focus:ring-indigo-500">
+                        <div>
+                            <div class="font-black text-2xl text-slate-800">12×12 磁磚</div>
+                            <div class="text-base font-bold text-slate-500">邊長：12 單位</div>
+                        </div>
+                    </label>
+                </div>
+
+                <div class="pt-2 flex flex-col md:flex-row items-center justify-between gap-4">
+                    <div class="text-lg text-slate-800 font-extrabold">
+                        <i class="fa-solid fa-lightbulb text-amber-500 mr-2 text-2xl"></i>思考點：請比較對照表中的「總費用」，哪一個尺寸能在「不產生廢料」的前提下花費最少？
+                    </div>
+                    <button onclick="submitEngineeringDecision()" class="w-full md:w-auto bg-emerald-600 hover:bg-emerald-500 text-white font-black text-2xl px-8 py-3.5 rounded-2xl shadow-lg transition transform active:scale-95 flex items-center justify-center space-x-2">
+                        <i class="fa-solid fa-circle-check"></i>
+                        <span>確認決策並進入挑戰賽</span>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== GAME ACTIVITY: 1-MINUTE CHALLENGE & ORID SYNTHESIS ==================== -->
+        <section id="act_game" class="tab-content hidden space-y-6">
+            <!-- Game Banner -->
+            <div class="bg-gradient-to-r from-rose-500 to-indigo-700 text-white rounded-2xl p-5 md:p-6 shadow-lg flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                <div class="space-y-1">
+                    <div class="flex items-center space-x-2">
+                        <span class="bg-amber-400 text-indigo-950 font-black text-sm px-3 py-1 rounded-full">限時挑戰</span>
+                        <span class="bg-white/20 text-white font-bold text-sm px-3 py-1 rounded-full">1分鐘速算競技</span>
+                    </div>
+                    <h2 class="text-2xl md:text-3xl font-black">挑戰賽：磁磚密鋪公因數極速判斷</h2>
+                    <p class="text-rose-100 text-base md:text-lg font-medium">限時 1 分鐘！快速判斷給定的正方形邊長能否「剛好鋪滿 24×36 牆面」！<span class="text-amber-300 font-bold">失誤滿 3 次將立即終止遊戲！</span></p>
+                </div>
+
+                <!-- Game Status Panel -->
+                <div class="flex items-center space-x-4 bg-black/30 backdrop-blur-sm px-5 py-3 rounded-2xl border border-white/20">
+                    <!-- Timer -->
+                    <div class="text-center">
+                        <div class="text-xs text-rose-200 font-bold">剩餘時間</div>
+                        <div id="gameTimerDisplay" class="text-3xl font-black text-amber-300 font-mono">01:00</div>
+                    </div>
+                    <!-- Lives (3 Chances) -->
+                    <div class="text-center border-l border-white/20 pl-4">
+                        <div class="text-xs text-rose-200 font-bold">機會 (失誤3次終止)</div>
+                        <div id="gameLivesDisplay" class="text-2xl font-black tracking-wider text-rose-300">❤️❤️❤️</div>
+                    </div>
+                    <!-- Score -->
+                    <div class="text-center border-l border-white/20 pl-4">
+                        <div class="text-xs text-rose-200 font-bold">挑戰得分</div>
+                        <div id="gameScoreDisplay" class="text-3xl font-black text-emerald-300 font-mono">0</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Game Progress Bar -->
+            <div class="w-full bg-slate-200 rounded-full h-3 overflow-hidden shadow-inner">
+                <div id="gameProgressBar" class="bg-gradient-to-r from-emerald-500 via-amber-400 to-rose-500 h-3 rounded-full transition-all duration-1000" style="width: 100%;"></div>
+            </div>
+
+            <!-- Interactive Game Stage Container -->
+            <div class="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-slate-200 text-center space-y-6">
+                <!-- Ready Screen -->
+                <div id="gameReadyScreen" class="py-8 space-y-6 max-w-xl mx-auto">
+                    <div class="w-24 h-24 bg-rose-100 text-rose-600 rounded-3xl flex items-center justify-center text-5xl mx-auto shadow-inner">
+                        <i class="fa-solid fa-gamepad"></i>
+                    </div>
+                    <div class="space-y-2">
+                        <h3 class="text-3xl font-black text-slate-800">準備好接受挑戰了嗎？</h3>
+                        <p class="text-lg font-bold text-slate-600">
+                            牆面尺寸固定為 <span class="text-indigo-600 font-black text-xl">高 24 × 寬 36</span>。<br>
+                            畫面上會隨機出現磁磚邊長，請以最快速度判斷是否為 24 與 36 的「公因數」！
+                        </p>
+                    </div>
+                    <div class="bg-amber-50 border-2 border-amber-200 rounded-2xl p-4 text-amber-900 font-bold text-base text-left space-y-1.5">
+                        <div><i class="fa-solid fa-circle-check text-emerald-600 mr-2"></i>答對 1 題得 10 分，測試對公因數的心算敏銳度！</div>
+                        <div><i class="fa-solid fa-circle-xmark text-rose-500 mr-2"></i>答錯扣減 1 點生命值，累計失誤滿 3 次立即終止遊戲。</div>
+                        <div><i class="fa-solid fa-brain text-indigo-600 mr-2"></i>挑戰結束後，系統將<strong>直接為貴隊套用 ORID 思考模式</strong>產出學習反思成果！</div>
+                    </div>
+                    <button onclick="startGameChallenge()" class="w-full sm:w-auto bg-gradient-to-r from-rose-600 to-indigo-600 hover:from-rose-500 hover:to-indigo-500 text-white font-black text-2xl px-12 py-4 rounded-2xl shadow-xl transition transform active:scale-95 flex items-center justify-center space-x-3 mx-auto">
+                        <i class="fa-solid fa-play"></i>
+                        <span>開始 1 分鐘極速挑戰</span>
+                    </button>
+                </div>
+
+                <!-- Playing Screen -->
+                <div id="gamePlayingScreen" class="hidden py-4 space-y-8 max-w-2xl mx-auto">
+                    <!-- Current Target Tile Card -->
+                    <div class="bg-slate-900 text-white rounded-3xl p-8 shadow-xl space-y-4 border-4 border-indigo-500/50">
+                        <div class="text-base font-bold text-indigo-300">請判斷此邊長能否完全密鋪 24×36 牆面？</div>
+                        <div class="flex items-center justify-center space-x-3">
+                            <span class="text-slate-400 text-xl font-bold">正方形磁磚邊長：</span>
+                            <span id="targetTileNumber" class="text-6xl md:text-7xl font-black text-amber-400 font-mono animate-pulse">4</span>
+                            <span class="text-2xl font-bold text-slate-300">單位</span>
+                        </div>
+                        <div class="text-sm font-semibold text-slate-400">
+                            提示：需能同時整除 24 且整除 36！
+                        </div>
+                    </div>
+
+                    <!-- Instant Explanation Feedback Box -->
+                    <div id="gameFeedbackMsg" class="min-h-[48px] flex items-center justify-center text-xl font-black text-slate-700">
+                        點擊下方按鈕作答！
+                    </div>
+
+                    <!-- Action Buttons: YES (Can Fit) vs NO (Cannot Fit) -->
+                    <div class="grid grid-cols-2 gap-6">
+                        <button onclick="handleGameAnswer(true)" class="touch-btn py-6 px-4 bg-emerald-500 hover:bg-emerald-600 text-white font-black text-2xl md:text-3xl rounded-3xl shadow-xl transition transform active:scale-95 flex flex-col items-center justify-center space-y-2">
+                            <i class="fa-solid fa-circle-check text-4xl"></i>
+                            <span>可以密鋪 (是公因數)</span>
+                        </button>
+                        <button onclick="handleGameAnswer(false)" class="touch-btn py-6 px-4 bg-rose-500 hover:bg-rose-600 text-white font-black text-2xl md:text-3xl rounded-3xl shadow-xl transition transform active:scale-95 flex flex-col items-center justify-center space-y-2">
+                            <i class="fa-solid fa-circle-xmark text-4xl"></i>
+                            <span>無法密鋪 (非公因數)</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Game Result / Over Screen with Dynamic ORID Synthesis -->
+                <div id="gameOverScreen" class="hidden py-6 space-y-6 max-w-2xl mx-auto text-left">
+                    <div class="text-center space-y-2">
+                        <div id="gameOverIconBox" class="w-20 h-20 bg-amber-100 text-amber-600 rounded-3xl flex items-center justify-center text-4xl mx-auto shadow-inner">
+                            <i class="fa-solid fa-trophy"></i>
+                        </div>
+                        <h3 id="gameOverTitle" class="text-3xl font-black text-slate-800">挑戰結算</h3>
+                        <p id="gameOverReason" class="text-base font-bold text-slate-600">時間結束！恭喜完成 1 分鐘極速挑戰！</p>
+                    </div>
+
+                    <!-- Score Card -->
+                    <div class="bg-indigo-50 border-2 border-indigo-200 rounded-2xl p-4 grid grid-cols-3 gap-3 text-center">
+                        <div>
+                            <div class="text-xs font-bold text-slate-500">挑戰得分</div>
+                            <div id="finalGameScore" class="text-2xl md:text-3xl font-black text-indigo-700 font-mono">0</div>
+                        </div>
+                        <div>
+                            <div class="text-xs font-bold text-slate-500">正確題數</div>
+                            <div id="finalCorrectCount" class="text-2xl md:text-3xl font-black text-emerald-600 font-mono">0</div>
+                        </div>
+                        <div>
+                            <div class="text-xs font-bold text-slate-500">失誤扣心</div>
+                            <div id="finalMistakeCount" class="text-2xl md:text-3xl font-black text-rose-500 font-mono">0 / 3</div>
+                        </div>
+                    </div>
+
+                    <!-- Feeling Quick-Tags Selector for ORID Reflective [R] -->
+                    <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-2">
+                        <div class="flex items-center justify-between">
+                            <span class="font-black text-slate-700 text-base flex items-center">
+                                <i class="fa-solid fa-heart-pulse text-rose-500 mr-2"></i>【感性體驗】點選貴隊挑戰當下的真實感受：
+                            </span>
+                            <span class="text-xs text-slate-400 font-bold">點擊即可切換</span>
+                        </div>
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-sm font-black">
+                            <button onclick="selectFeelingTag('⚡ 緊張刺激且全神貫注')" class="feeling-tag-btn p-2 rounded-xl border-2 border-indigo-400 bg-indigo-50 text-indigo-900 transition text-center active:scale-95" data-tag="⚡ 緊張刺激且全神貫注">⚡ 緊張刺激</button>
+                            <button onclick="selectFeelingTag('🎯 手腦並用快速判斷')" class="feeling-tag-btn p-2 rounded-xl border-2 border-slate-200 bg-white text-slate-700 transition text-center active:scale-95" data-tag="🎯 手腦並用快速判斷">🎯 手腦並用</button>
+                            <button onclick="selectFeelingTag('💡 恍然大悟掌握公因數')" class="feeling-tag-btn p-2 rounded-xl border-2 border-slate-200 bg-white text-slate-700 transition text-center active:scale-95" data-tag="💡 恍然大悟掌握公因數">💡 恍然大悟</button>
+                            <button onclick="selectFeelingTag('🔥 越挫越勇默契滿分')" class="feeling-tag-btn p-2 rounded-xl border-2 border-slate-200 bg-white text-slate-700 transition text-center active:scale-95" data-tag="🔥 越挫越勇默契滿分">🔥 默契滿分</button>
+                        </div>
+                    </div>
+
+                    <!-- ORID Generated Reflection Preview Box -->
+                    <div class="bg-white border-2 border-indigo-200 rounded-2xl p-5 shadow-sm space-y-3">
+                        <div class="flex items-center justify-between border-b border-indigo-100 pb-2">
+                            <h4 class="font-black text-indigo-950 text-lg flex items-center">
+                                <i class="fa-solid fa-lightbulb text-amber-500 mr-2"></i>
+                                戰報自動轉化：ORID 學習歷程反思
+                            </h4>
+                            <span class="text-xs font-bold bg-indigo-100 text-indigo-800 px-2.5 py-0.5 rounded-full">自動分析生成</span>
+                        </div>
+
+                        <div class="space-y-3 text-sm md:text-base">
+                            <div class="bg-indigo-50/70 p-3 rounded-xl border-l-4 border-indigo-600">
+                                <span class="font-black text-indigo-900 block">[O 客觀事實]</span>
+                                <p id="previewOridO" class="text-slate-800 font-medium mt-1">載入中...</p>
+                            </div>
+                            <div class="bg-rose-50/70 p-3 rounded-xl border-l-4 border-rose-500">
+                                <span class="font-black text-rose-900 block">[R 感性感受]</span>
+                                <p id="previewOridR" class="text-slate-800 font-medium mt-1">載入中...</p>
+                            </div>
+                            <div class="bg-amber-50/70 p-3 rounded-xl border-l-4 border-amber-500">
+                                <span class="font-black text-amber-900 block">[I 詮釋意義]</span>
+                                <p id="previewOridI" class="text-slate-800 font-medium mt-1">載入中...</p>
+                            </div>
+                            <div class="bg-emerald-50/70 p-3 rounded-xl border-l-4 border-emerald-600">
+                                <span class="font-black text-emerald-900 block">[D 決定行動]</span>
+                                <p id="previewOridD" class="text-slate-800 font-medium mt-1">載入中...</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Direct Publish Action to Showcase Wall -->
+                    <div class="flex flex-col sm:flex-row gap-3 pt-2">
+                        <button onclick="startGameChallenge()" class="w-full sm:w-1/3 bg-slate-100 hover:bg-slate-200 text-slate-800 font-black text-lg py-3.5 px-4 rounded-2xl border border-slate-300 transition text-center active:scale-95">
+                            <i class="fa-solid fa-rotate-right mr-1.5"></i>再挑戰一次
+                        </button>
+                        <button onclick="publishGameOridToShowcase()" class="w-full sm:w-2/3 bg-gradient-to-r from-emerald-600 to-indigo-600 hover:from-emerald-500 hover:to-indigo-500 text-white font-black text-xl py-3.5 px-6 rounded-2xl shadow-xl transition transform active:scale-95 flex items-center justify-center space-x-2">
+                            <i class="fa-solid fa-paper-plane"></i>
+                            <span>確認並發布 ORID 成果至展示牆</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== SHOWCASE WALL ==================== -->
+        <section id="act4" class="tab-content hidden space-y-6">
+            <!-- Banner -->
+            <div class="bg-gradient-to-r from-amber-500 to-indigo-600 text-white rounded-2xl p-6 shadow-md flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                <div class="space-y-1">
+                    <div class="flex items-center space-x-2">
+                        <span class="bg-white/20 text-white font-bold text-sm px-3 py-1 rounded-full">公開觀摩與分享</span>
+                        <span class="bg-amber-300 text-indigo-950 font-black text-sm px-3 py-1 rounded-full">即時線上牆</span>
+                    </div>
+                    <h2 class="text-2xl md:text-3xl font-black">學生成果展示牆 (Showcase Gallery)</h2>
+                    <p class="text-indigo-100 text-base md:text-lg font-medium">各組裝修隊之工程決策、挑戰賽戰績與 ORID 思維歷程即時在此公開呈現！</p>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <!-- Export as Image Button -->
+                    <button onclick="exportShowcaseImage()" id="exportImgBtn" class="bg-white text-indigo-900 hover:bg-indigo-50 font-black text-base px-4 py-2.5 rounded-xl shadow transition flex items-center space-x-1.5 active:scale-95">
+                        <i class="fa-solid fa-file-image text-indigo-600 text-lg"></i>
+                        <span>匯出成果圖檔 (PNG)</span>
+                    </button>
+                    <!-- Clear Showcase Button -->
+                    <button onclick="clearAllShowcaseData()" class="bg-rose-500/80 hover:bg-rose-600 text-white font-bold text-base px-3 py-2.5 rounded-xl shadow transition" title="清空展示牆">
+                        <i class="fa-solid fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Stats Overview Row -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="bg-white p-4 rounded-2xl border border-slate-200 text-center shadow-sm">
+                    <div class="text-sm font-bold text-slate-500">已發表作品</div>
+                    <div id="statTotalSubmissions" class="text-3xl font-black text-indigo-600">0 組</div>
+                </div>
+                <div class="bg-white p-4 rounded-2xl border border-slate-200 text-center shadow-sm">
+                    <div class="text-sm font-bold text-slate-500">選中最大公因數 (12×12)</div>
+                    <div id="statOptimalCount" class="text-3xl font-black text-emerald-600">0 組</div>
+                </div>
+                <div class="bg-white p-4 rounded-2xl border border-slate-200 text-center shadow-sm">
+                    <div class="text-sm font-bold text-slate-500">平均試鋪探索</div>
+                    <div id="statAvgTrials" class="text-3xl font-black text-amber-600">0 次</div>
+                </div>
+                <div class="bg-white p-4 rounded-2xl border border-slate-200 text-center shadow-sm">
+                    <div class="text-sm font-bold text-slate-500">同儕互動按讚</div>
+                    <div id="statTotalLikes" class="text-3xl font-black text-rose-500">0 次</div>
+                </div>
+            </div>
+
+            <!-- Showcase Gallery Cards Container (Captured for Image Export) -->
+            <div id="showcaseCardsContainer" class="grid grid-cols-1 md:grid-cols-2 gap-6 p-2 rounded-3xl bg-slate-50/50">
+                <!-- Dynamically populated -->
+                <div id="emptyShowcaseMsg" class="col-span-full bg-white border-2 border-dashed border-slate-300 rounded-3xl p-12 text-center text-slate-400 space-y-3">
+                    <i class="fa-solid fa-cloud-arrow-up text-5xl text-slate-300"></i>
+                    <p class="text-xl font-black text-slate-500">目前尚無小組提交作品</p>
+                    <p class="text-base text-slate-400">完成「挑戰賽：1分鐘速判」並點選發布，貴隊的 ORID 成果卡就會直接在此公開呈現喔！</p>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- QR Code Link Modal -->
+    <div id="qrModal" onclick="if(event.target === this) closeModal('qrModal')" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl shadow-2xl max-w-sm w-full p-6 text-center space-y-4 border border-slate-200">
+            <div class="flex justify-between items-center border-b pb-2">
+                <h3 class="text-xl font-black text-slate-800"><i class="fa-solid fa-qrcode text-indigo-600 mr-2"></i>iPad 快速連線</h3>
+                <button onclick="closeModal('qrModal')" class="text-slate-400 hover:text-slate-600 text-xl"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div id="qrcode" class="flex justify-center p-3 bg-white border border-slate-200 rounded-xl shadow-inner min-h-[190px] items-center"></div>
+            <p class="text-sm font-bold text-slate-600">請學生使用 iPad 相機掃描 QR Code 開啟網頁</p>
+            <button onclick="copyCurrentURL()" class="w-full py-2.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold rounded-xl border border-indigo-200 transition text-sm">
+                <i class="fa-solid fa-copy mr-1"></i>複製網頁連結
+            </button>
+        </div>
+    </div>
+
+    <!-- Course Design Guide Modal (課程設計說明 - 完整三大架構) -->
+    <div id="guideModal" onclick="if(event.target === this) closeModal('guideModal')" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl shadow-2xl max-w-3xl w-full p-6 md:p-8 space-y-6 border border-slate-200 max-h-[88vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 class="text-2xl md:text-3xl font-black text-indigo-950 flex items-center">
+                    <i class="fa-solid fa-compass text-amber-500 mr-2"></i>課程設計說明
+                </h3>
+                <button onclick="closeModal('guideModal')" class="text-slate-400 hover:text-slate-600 text-2xl p-1"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <div class="space-y-6 text-slate-700">
+                <!-- Section 1: Learning Objectives -->
+                <div class="bg-indigo-50/70 p-5 rounded-2xl border-l-4 border-indigo-600 space-y-3">
+                    <div class="flex items-center space-x-2">
+                        <span class="w-7 h-7 rounded-lg bg-indigo-600 text-white font-black text-sm flex items-center justify-center">1</span>
+                        <h4 class="font-black text-indigo-950 text-xl">一、學習目標 (Learning Objectives)</h4>
+                    </div>
+                    <ul class="space-y-2 text-base font-semibold text-slate-700 list-disc list-inside pl-2">
+                        <li><strong class="text-indigo-900">認知理解：</strong>透過 24×36 長方形牆面之虛擬試鋪，察覺「整除無縫隙」與長、寬「公因數」的等價關係，建立「最大公因數」為最佳成本控制點之數感概念。</li>
+                        <li><strong class="text-indigo-900">技能實作：</strong>熟練操作觸控微調拉桿與真實尺寸對照表，並在「1分鐘速判挑戰」中展現快速整除心算與即時反應決策能力。</li>
+                        <li><strong class="text-indigo-900">情意與素養：</strong>將抽象數學概念轉化為工程財務思維（零廢棄、材料費、人工灌漿費、裁切違約金），並透過 ORID 架構進行後設認知反思與同儕成果分享。</li>
+                    </ul>
+                </div>
+
+                <!-- Section 2: Operating Instructions -->
+                <div class="bg-emerald-50/70 p-5 rounded-2xl border-l-4 border-emerald-600 space-y-3">
+                    <div class="flex items-center space-x-2">
+                        <span class="w-7 h-7 rounded-lg bg-emerald-600 text-white font-black text-sm flex items-center justify-center">2</span>
+                        <h4 class="font-black text-emerald-950 text-xl">二、網頁操作說明 (Operation Manual)</h4>
+                    </div>
+                    <ul class="space-y-2 text-base font-semibold text-slate-700 list-disc list-inside pl-2">
+                        <li><strong class="text-emerald-900">頂端工具列：</strong>純圖示簡潔設計，依序為 QR Code 掃碼分享（支援 iPad 相機一鍵開啟）、全螢幕模式切換、課程設計說明。小組名稱可隨時點擊輸入修改。</li>
+                        <li><strong class="text-emerald-900">活動一（試鋪探索）：</strong>滑動拉桿測試 1~24 單位正方形磁磚，觀察擬真畫布之邊界溢出與公因數整除分析，點擊按鈕累積試鋪紀錄。</li>
+                        <li><strong class="text-emerald-900">活動二（工程決策）：</strong>點擊重點尺寸（2, 3, 4, 5, 6, 12），觀察施工成本矩陣（材料費、每塊 150 元灌漿工錢、5,000 元廢料罰金），自主決策最佳尺寸。</li>
+                        <li><strong class="text-emerald-900">挑戰賽（1分鐘速判）：</strong>60 秒倒數計時，快速判斷隨機邊長是否為公因數；失誤滿 3 次終止挑戰，賽後系統自動導入 ORID 思考模式生成專屬反思卡。</li>
+                        <li><strong class="text-emerald-900">成果展示牆：</strong>各組 ORID 反思卡即時公開呈現，支援全班愛心點讚互評，並可點擊「匯出成果圖檔 (PNG)」一鍵下載全班學習成果海報。</li>
+                    </ul>
+                </div>
+
+                <!-- Section 3: Classroom Discussion Prompts -->
+                <div class="bg-amber-50/70 p-5 rounded-2xl border-l-4 border-amber-600 space-y-3">
+                    <div class="flex items-center space-x-2">
+                        <span class="w-7 h-7 rounded-lg bg-amber-600 text-white font-black text-sm flex items-center justify-center">3</span>
+                        <h4 class="font-black text-amber-950 text-xl">三、課堂提問建議 (Guiding Questions)</h4>
+                    </div>
+                    <ul class="space-y-2 text-base font-semibold text-slate-700 list-disc list-inside pl-2">
+                        <li><strong class="text-amber-950">導入階段 (引起動機)：</strong>「大家觀察活動一的牆面，為什麼邊長 5 的正方形放進 24×36 牆面時會凸出去？要怎麼樣的邊長才能『剛剛好鋪滿且不裁剪』？」</li>
+                        <li><strong class="text-amber-950">發展階段 (工程探究)：</strong>「既然 1×1、6×6、12×12 都能鋪滿，為什麼裝修老闆不推薦全用 1×1 磁磚？『磁磚數量多』在真實工程中會帶來什麼代價？」</li>
+                        <li><strong class="text-amber-950">歸納階段 (ORID 反思)：</strong>「在 1 分鐘極速挑戰中，哪一個數字最讓你猶豫？如果未來家裡要裝修貼地磚，你會如何運用『最大公因數』幫家人省錢又環保？」</li>
+                    </ul>
+                </div>
+            </div>
+
+            <button onclick="closeModal('guideModal')" class="w-full py-3.5 bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xl rounded-2xl shadow transition active:scale-95">
+                關閉並返回學習探索
+            </button>
+        </div>
+    </div>
+
+    <!-- Notification Toast Modal -->
+    <div id="toast" class="fixed bottom-12 left-1/2 transform -translate-x-1/2 bg-slate-900 text-white px-6 py-3 rounded-2xl shadow-2xl text-lg font-bold z-50 hidden flex items-center space-x-2 border border-slate-700">
+        <i id="toastIcon" class="fa-solid fa-circle-check text-emerald-400 text-xl"></i>
+        <span id="toastMsg">操作成功！</span>
+    </div>
+
+    <!-- Footer Section with Exact Required Text -->
+    <footer class="bg-white border-t border-slate-200 py-4 text-center mt-auto">
+        <p class="text-base font-bold text-slate-600 tracking-wider">
+            數感實驗室  | 互動學習系統 | Design：S.C. Kuo
+        </p>
+    </footer>
+
+    <script>
+        // Storage keys & Broadcast channel for multi-tab synchronization
+        const STORAGE_SHOWCASE_KEY = "math_renovation_showcase_data";
+        const STORAGE_TRIALS_KEY = "math_renovation_active_trials";
+        const syncChannel = new BroadcastChannel('math_renovation_sync_channel');
+
+        // Global App State
+        const state = {
+            groupName: "第 1 組",
+            currentTileSize: 1,
+            wallWidth: 36,
+            wallHeight: 24,
+            act2SelectedSize: 12,
+            trialLogs: [],
+            engineeringDecision: 12,
+            selectedFeeling: "⚡ 緊張刺激且全神貫注",
+            oridData: { O: "", R: "", I: "", D: "" },
+            showcaseData: [],
+            // Game State
+            game: {
+                active: false,
+                isAnswering: false,
+                timeLeft: 60,
+                timerId: null,
+                score: 0,
+                mistakes: 0,
+                maxMistakes: 3,
+                correctCount: 0,
+                currentTarget: 4,
+                pool: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 14, 16, 18, 20, 24]
+            }
+        };
+
+        // DOM elements cache
+        let canvas, ctx;
+
+        // Broadcast listener for live tab updates
+        syncChannel.onmessage = (event) => {
+            if (event.data && event.data.type === 'SHOWCASE_UPDATED') {
+                loadSavedData();
+                renderShowcaseWall();
+            }
+        };
+
+        // Window Load Initialization
+        window.onload = function() {
+            loadSavedData();
+            initCanvas();
+            renderCostMatrix();
+            selectAct2Size(12);
+            generateQRCode();
+            updateGroupIdentity();
+            drawWall();
+            renderShowcaseWall();
+
+            // Radio button listener
+            document.querySelectorAll('input[name="engineeringChoice"]').forEach(radio => {
+                radio.addEventListener('change', (e) => {
+                    state.engineeringDecision = parseInt(e.target.value);
+                });
+            });
+
+            // Cross-window storage listener
+            window.addEventListener('storage', (e) => {
+                if (e.key === STORAGE_SHOWCASE_KEY) {
+                    loadSavedData();
+                    renderShowcaseWall();
+                }
+            });
+
+            // Global ESC key to close modals
+            window.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    closeModal('qrModal');
+                    closeModal('guideModal');
+                }
+            });
+
+            // Listen to system fullscreen exit/enter
+            document.addEventListener('fullscreenchange', syncFullscreenIcon);
+            document.addEventListener('webkitfullscreenchange', syncFullscreenIcon);
+        };
+
+        function syncFullscreenIcon() {
+            const isFs = document.fullscreenElement || document.webkitFullscreenElement;
+            const btn = document.querySelector('#fullscreenBtn i');
+            if (btn) {
+                btn.className = isFs ? "fa-solid fa-compress text-xl" : "fa-solid fa-expand text-xl";
+            }
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        function loadSavedData() {
+            try {
+                const storedShowcase = localStorage.getItem(STORAGE_SHOWCASE_KEY);
+                if (storedShowcase) {
+                    state.showcaseData = JSON.parse(storedShowcase);
+                } else {
+                    state.showcaseData = [];
+                }
+
+                const storedTrials = localStorage.getItem(STORAGE_TRIALS_KEY);
+                if (storedTrials) {
+                    state.trialLogs = JSON.parse(storedTrials);
+                    renderTrialTable();
+                }
+            } catch(e) {
+                console.error("Storage load error:", e);
+            }
+        }
+
+        function saveDataToStorage(broadcast = true) {
+            try {
+                localStorage.setItem(STORAGE_SHOWCASE_KEY, JSON.stringify(state.showcaseData));
+                localStorage.setItem(STORAGE_TRIALS_KEY, JSON.stringify(state.trialLogs));
+                if (broadcast) {
+                    syncChannel.postMessage({ type: 'SHOWCASE_UPDATED' });
+                }
+            } catch(e) {
+                console.error("Storage save error:", e);
+            }
+        }
+
+        function updateGroupIdentity() {
+            const input = document.getElementById('groupNameInput');
+            if (input && input.value.trim() !== '') {
+                state.groupName = input.value.trim();
+            }
+        }
+
+        // Tab Switching
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('border-indigo-600', 'text-indigo-600');
+                btn.classList.add('border-transparent', 'text-slate-500');
+            });
+
+            const activeContent = document.getElementById(tabId);
+            if (activeContent) activeContent.classList.remove('hidden');
+            
+            const activeBtn = document.getElementById(`tab-${tabId}`);
+            if (activeBtn) {
+                activeBtn.classList.remove('border-transparent', 'text-slate-500');
+                activeBtn.classList.add('border-indigo-600', 'text-indigo-600');
+            }
+
+            if (tabId === 'act1') {
+                setTimeout(drawWall, 50);
+            } else if (tabId === 'act4') {
+                renderShowcaseWall();
+            }
+        }
+
+        function initCanvas() {
+            canvas = document.getElementById('wallCanvas');
+            ctx = canvas.getContext('2d');
+
+            const containerWidth = canvas.parentElement.clientWidth - 16;
+            const aspectRatio = 24 / 36;
+            canvas.width = Math.min(containerWidth, 800);
+            canvas.height = canvas.width * aspectRatio;
+
+            window.addEventListener('resize', () => {
+                if (canvas && canvas.parentElement) {
+                    const newW = Math.min(canvas.parentElement.clientWidth - 16, 800);
+                    canvas.width = newW;
+                    canvas.height = newW * aspectRatio;
+                    drawWall();
+                }
+            });
+        }
+
+        function onSliderChange(val) {
+            state.currentTileSize = parseInt(val);
+            document.getElementById('tileSizeDisplay').innerText = val;
+            updateAnalysisCard();
+            drawWall();
+        }
+
+        function updateAnalysisCard() {
+            const s = state.currentTileSize;
+            const wFit = (36 % s === 0);
+            const hFit = (24 % s === 0);
+            const isCommon = wFit && hFit;
+
+            document.getElementById('widthDivResult').innerText = `36 ÷ ${s} = ${Math.floor(36 / s)} ${36 % s > 0 ? ' (餘 ' + (36 % s) + ')' : ''}`;
+            document.getElementById('heightDivResult').innerText = `24 ÷ ${s} = ${Math.floor(24 / s)} ${24 % s > 0 ? ' (餘 ' + (24 % s) + ')' : ''}`;
+
+            const badge = document.getElementById('isCommonFactorBadge');
+            const fitStatus = document.getElementById('canvasFitStatus');
+
+            if (isCommon) {
+                badge.innerText = `是 36 與 24 的公因數！`;
+                badge.className = `px-3 py-1 rounded-full text-base font-black bg-emerald-500 text-white`;
+                
+                fitStatus.innerText = `剛好完美鋪滿 (零廢棄)`;
+                fitStatus.className = `font-extrabold text-lg px-4 py-1.5 rounded-xl bg-emerald-100 text-emerald-800 border border-emerald-300`;
+            } else {
+                badge.innerText = `非公因數 (無法平鋪)`;
+                badge.className = `px-3 py-1 rounded-full text-base font-black bg-rose-500 text-white`;
+
+                fitStatus.innerText = `無法鋪滿 (產生溢出與切割)`;
+                fitStatus.className = `font-extrabold text-lg px-4 py-1.5 rounded-xl bg-rose-100 text-rose-800 border border-rose-300`;
+            }
+
+            const tilesNeeded = Math.ceil(36 / s) * Math.ceil(24 / s);
+            document.getElementById('totalTilesCount').innerText = `${tilesNeeded} 塊`;
+        }
+
+        function drawWall() {
+            if (!ctx) return;
+            const s = state.currentTileSize;
+            const cw = canvas.width;
+            const ch = canvas.height;
+
+            const unitX = cw / 36;
+            const unitY = ch / 24;
+
+            ctx.fillStyle = '#0f172a';
+            ctx.fillRect(0, 0, cw, ch);
+
+            const isCommon = (36 % s === 0) && (24 % s === 0);
+            const cols = Math.ceil(36 / s);
+            const rows = Math.ceil(24 / s);
+
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < cols; c++) {
+                    const x = c * s * unitX;
+                    const y = r * s * unitY;
+                    const w = s * unitX;
+                    const h = s * unitY;
+
+                    const isOverflow = (c * s + s > 36) || (r * s + s > 24);
+
+                    if (isOverflow) {
+                        ctx.fillStyle = 'rgba(244, 63, 94, 0.7)';
+                        ctx.strokeStyle = '#f43f5e';
+                    } else {
+                        const alt = (r + c) % 2 === 0;
+                        ctx.fillStyle = isCommon 
+                            ? (alt ? '#0d9488' : '#14b8a6') 
+                            : (alt ? '#6366f1' : '#818cf8');
+                        ctx.strokeStyle = '#ffffff';
+                    }
+
+                    ctx.fillRect(x, y, w, h);
+                    ctx.lineWidth = 1.5;
+                    ctx.strokeRect(x, y, w, h);
+
+                    if (w > 22 && h > 22) {
+                        ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+                        ctx.font = `bold ${Math.max(12, Math.min(18, w * 0.35))}px sans-serif`;
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        ctx.fillText(`${s}×${s}`, x + w/2, y + h/2);
+                    }
+                }
+            }
+
+            ctx.strokeStyle = '#f59e0b';
+            ctx.lineWidth = 4;
+            ctx.strokeRect(0, 0, cw, ch);
+        }
+
+        function recordCurrentTrial() {
+            const s = state.currentTileSize;
+            const wFit = (36 % s === 0);
+            const hFit = (24 % s === 0);
+            const isCommon = wFit && hFit;
+            const tilesNeeded = Math.ceil(36 / s) * Math.ceil(24 / s);
+
+            const exists = state.trialLogs.some(log => log.size === s);
+            if (!exists) {
+                state.trialLogs.push({
+                    size: s,
+                    wFit: wFit,
+                    hFit: hFit,
+                    isCommon: isCommon,
+                    count: tilesNeeded
+                });
+
+                saveDataToStorage();
+                renderTrialTable();
+                showToast(`已記錄邊長 ${s}×${s} 的測試結果！`);
+            } else {
+                showToast(`邊長 ${s}×${s} 已經在記錄表中囉！`, 'info');
+            }
+        }
+
+        function renderTrialTable() {
+            const tbody = document.getElementById('trialLogTableBody');
+            document.getElementById('trialsCountBadge').innerText = `${state.trialLogs.length} 次`;
+
+            if (state.trialLogs.length === 0) {
+                tbody.innerHTML = `
+                    <tr id="emptyTrialRow">
+                        <td colspan="6" class="text-center py-8 text-slate-400 font-bold text-xl">
+                            尚未進行任何磁磚試鋪測試，請調整拉桿開始測試！
+                        </td>
+                    </tr>`;
+                return;
+            }
+
+            tbody.innerHTML = state.trialLogs.map(log => `
+                <tr class="hover:bg-slate-50 transition">
+                    <td class="p-3.5 font-extrabold text-indigo-700 text-xl">${log.size} × ${log.size}</td>
+                    <td class="p-3.5">${log.wFit ? '<span class="text-emerald-600"><i class="fa-solid fa-check mr-1"></i>整除</span>' : '<span class="text-rose-500"><i class="fa-solid fa-xmark mr-1"></i>有餘數</span>'}</td>
+                    <td class="p-3.5">${log.hFit ? '<span class="text-emerald-600"><i class="fa-solid fa-check mr-1"></i>整除</span>' : '<span class="text-rose-500"><i class="fa-solid fa-xmark mr-1"></i>有餘數</span>'}</td>
+                    <td class="p-3.5">
+                        ${log.isCommon 
+                            ? '<span class="bg-emerald-100 text-emerald-800 text-sm px-3 py-1 rounded-full font-extrabold">是公因數</span>' 
+                            : '<span class="bg-rose-100 text-rose-800 text-sm px-3 py-1 rounded-full font-extrabold">非公因數</span>'}
+                    </td>
+                    <td class="p-3.5 font-extrabold text-slate-800 text-xl">${log.count} 塊</td>
+                    <td class="p-3.5 font-bold ${log.isCommon ? 'text-emerald-600' : 'text-rose-500'}">
+                        ${log.isCommon ? '完美鋪滿' : '產生裁切與廢料罰金'}
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function clearTrialsHistory() {
+            state.trialLogs = [];
+            saveDataToStorage();
+            renderTrialTable();
+            showToast('已清空試鋪紀錄', 'info');
+        }
+
+        function selectAct2Size(s) {
+            state.act2SelectedSize = s;
+            state.engineeringDecision = s;
+            
+            document.querySelectorAll('.act2-size-btn').forEach(btn => {
+                if (parseInt(btn.dataset.act2Size) === s) {
+                    btn.classList.add('ring-4', 'ring-emerald-500', 'bg-emerald-100');
+                } else {
+                    btn.classList.remove('ring-4', 'ring-emerald-500', 'bg-emerald-100');
+                }
+            });
+
+            const radio = document.querySelector(`input[name="engineeringChoice"][value="${s}"]`);
+            if (radio) radio.checked = true;
+
+            const isCommon = (36 % s === 0) && (24 % s === 0);
+            const tileCount = Math.ceil(36 / s) * Math.ceil(24 / s);
+            const matCost = 8640;
+            const laborCost = tileCount * 150;
+            const penalty = isCommon ? 0 : 5000;
+            const totalCost = matCost + laborCost + penalty;
+
+            document.getElementById('act2SelectedSizeTitle').innerText = `目前選擇：${s} × ${s} 磁磚`;
+            document.getElementById('act2TileCount').innerText = `${tileCount} 塊`;
+            document.getElementById('act2MatCost').innerText = `$${matCost.toLocaleString()}`;
+            document.getElementById('act2LaborCost').innerText = `$${laborCost.toLocaleString()}`;
+            document.getElementById('act2Penalty').innerText = `$${penalty.toLocaleString()}`;
+            document.getElementById('act2TotalCostDisplay').innerText = `$${totalCost.toLocaleString()} 元`;
+
+            const badge = document.getElementById('act2OverflowBadge');
+            if (isCommon) {
+                badge.innerText = "零廢棄 (完全整除)";
+                badge.className = "bg-emerald-500 text-white font-black text-base px-3 py-1 rounded-full";
+            } else {
+                badge.innerText = "邊界溢出 (需處置罰金 $5,000)";
+                badge.className = "bg-rose-500 text-white font-black text-base px-3 py-1 rounded-full animate-pulse";
+            }
+        }
+
+        function renderCostMatrix() {
+            const tbody = document.getElementById('costMatrixTableBody');
+            if (!tbody) return;
+            const sizes = [1, 2, 3, 4, 5, 6, 12, 24];
+            
+            tbody.innerHTML = sizes.map(s => {
+                const isCommon = (36 % s === 0) && (24 % s === 0);
+                const tileCount = Math.ceil(36 / s) * Math.ceil(24 / s);
+                const matCost = 8640;
+                const laborCost = tileCount * 150;
+                const penalty = isCommon ? 0 : 5000;
+                const totalCost = matCost + laborCost + penalty;
+
+                return `
+                    <tr class="hover:bg-slate-50 transition">
+                        <td class="p-3.5 font-extrabold text-slate-800">${s} × ${s}</td>
+                        <td class="p-3.5 font-bold ${isCommon ? 'text-emerald-600' : 'text-rose-500'}">
+                            ${isCommon ? '<i class="fa-solid fa-circle-check mr-1"></i>是 (剛好鋪滿)' : '<i class="fa-solid fa-circle-xmark mr-1"></i>否 (邊界溢出)'}
+                        </td>
+                        <td class="p-3.5 font-extrabold text-indigo-700">${tileCount} 塊</td>
+                        <td class="p-3.5 text-slate-700">$${matCost.toLocaleString()}</td>
+                        <td class="p-3.5 text-amber-700 font-extrabold">$${laborCost.toLocaleString()}</td>
+                        <td class="p-3.5 font-extrabold ${penalty > 0 ? 'text-rose-600' : 'text-emerald-600'}">$${penalty.toLocaleString()}</td>
+                        <td class="p-3.5 font-black text-xl text-slate-900">
+                            $${totalCost.toLocaleString()} 元
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function submitEngineeringDecision() {
+            const selectedRadio = document.querySelector('input[name="engineeringChoice"]:checked');
+            const chosenSize = selectedRadio ? parseInt(selectedRadio.value) : (state.engineeringDecision || 12);
+            state.engineeringDecision = chosenSize;
+            
+            if (chosenSize === 12) {
+                showToast('🎉 恭喜！你們發現了最佳成本與零廢棄的最佳解！進入挑戰賽驗證直覺！', 'success');
+            } else {
+                showToast(`已記錄 ${chosenSize}×${chosenSize} 磁磚決策！進入 1 分鐘極速挑戰賽！`, 'info');
+            }
+            
+            setTimeout(() => {
+                switchTab('act_game');
+            }, 600);
+        }
+
+        // ==================== 1-MINUTE GAME CHALLENGE LOGIC ====================
+        function startGameChallenge() {
+            state.game.active = true;
+            state.game.isAnswering = false;
+            state.game.timeLeft = 60;
+            state.game.score = 0;
+            state.game.mistakes = 0;
+            state.game.correctCount = 0;
+
+            document.getElementById('gameReadyScreen').classList.add('hidden');
+            document.getElementById('gameOverScreen').classList.add('hidden');
+            document.getElementById('gamePlayingScreen').classList.remove('hidden');
+
+            updateGameStatsUI();
+            nextGameQuestion();
+
+            if (state.game.timerId) clearInterval(state.game.timerId);
+
+            state.game.timerId = setInterval(() => {
+                state.game.timeLeft--;
+                updateGameStatsUI();
+
+                if (state.game.timeLeft <= 0) {
+                    endGameChallenge('timeup');
+                }
+            }, 1000);
+        }
+
+        function updateGameStatsUI() {
+            const sec = state.game.timeLeft;
+            const minStr = String(Math.floor(sec / 60)).padStart(2, '0');
+            const secStr = String(sec % 60).padStart(2, '0');
+            document.getElementById('gameTimerDisplay').innerText = `${minStr}:${secStr}`;
+            document.getElementById('gameScoreDisplay').innerText = state.game.score;
+
+            // Heart icons calculation
+            const remainingChances = Math.max(0, state.game.maxMistakes - state.game.mistakes);
+            let heartsStr = '';
+            for (let i = 0; i < 3; i++) {
+                heartsStr += (i < remainingChances) ? '❤️' : '🖤';
+            }
+            document.getElementById('gameLivesDisplay').innerText = heartsStr;
+
+            // Progress bar
+            const pct = (state.game.timeLeft / 60) * 100;
+            document.getElementById('gameProgressBar').style.width = `${Math.max(0, pct)}%`;
+        }
+
+        function nextGameQuestion() {
+            state.game.isAnswering = false;
+            const pool = state.game.pool;
+            let nextNum;
+            do {
+                nextNum = pool[Math.floor(Math.random() * pool.length)];
+            } while (nextNum === state.game.currentTarget && pool.length > 1);
+
+            state.game.currentTarget = nextNum;
+            document.getElementById('targetTileNumber').innerText = nextNum;
+            document.getElementById('gameFeedbackMsg').innerHTML = `<span class="text-slate-500">磁磚邊長 ${nextNum} 單位：請判斷是否為公因數！</span>`;
+        }
+
+        function handleGameAnswer(userSaysCanFit) {
+            if (!state.game.active || state.game.isAnswering) return;
+            state.game.isAnswering = true; // Debounce protect
+
+            const s = state.game.currentTarget;
+            const isCommon = (36 % s === 0) && (24 % s === 0);
+
+            if (userSaysCanFit === isCommon) {
+                // Correct Answer
+                state.game.correctCount++;
+                state.game.score += 10;
+                document.getElementById('gameFeedbackMsg').innerHTML = `
+                    <span class="text-emerald-600 font-black animate-bounce inline-block">
+                        <i class="fa-solid fa-circle-check mr-1.5"></i>答對了！+10 分！(${s} ${isCommon ? '可同時整除 24 與 36' : '無法同時整除'})
+                    </span>`;
+                updateGameStatsUI();
+                setTimeout(nextGameQuestion, 350);
+            } else {
+                // Wrong Answer
+                state.game.mistakes++;
+                updateGameStatsUI();
+                document.getElementById('gameFeedbackMsg').innerHTML = `
+                    <span class="text-rose-600 font-black">
+                        <i class="fa-solid fa-circle-xmark mr-1.5"></i>答錯囉！${s} ${isCommon ? '是公因數 (能整除 24 與 36)' : '不是公因數 (會產生餘數)'}
+                    </span>`;
+
+                if (state.game.mistakes >= state.game.maxMistakes) {
+                    endGameChallenge('mistakes');
+                } else {
+                    setTimeout(nextGameQuestion, 750);
+                }
+            }
+        }
+
+        function selectFeelingTag(tag) {
+            state.selectedFeeling = tag;
+            document.querySelectorAll('.feeling-tag-btn').forEach(btn => {
+                if (btn.dataset.tag === tag) {
+                    btn.className = "feeling-tag-btn p-2 rounded-xl border-2 border-indigo-500 bg-indigo-100 text-indigo-950 font-black transition text-center shadow-sm";
+                } else {
+                    btn.className = "feeling-tag-btn p-2 rounded-xl border-2 border-slate-200 bg-white text-slate-700 transition text-center active:scale-95";
+                }
+            });
+            synthesizeOridData();
+        }
+
+        function synthesizeOridData() {
+            const score = state.game.score;
+            const correct = state.game.correctCount;
+            const mistakes = state.game.mistakes;
+            const chosen = state.engineeringDecision || state.act2SelectedSize || 12;
+
+            const oridO = `在 1 分鐘速判挑戰中獲得 ${score} 分，成功判定 ${correct} 題公因數，累積失誤 ${mistakes} 次。在 24×36 牆面中驗證了：邊長為 1, 2, 3, 4, 6, 12 的正方形磁磚均為兩者之公因數，能剛好密鋪且不裁剪；邊長 5、7、8 等尺寸無法同時整除，會產生邊界溢出與縫隙。`;
+            const oridR = `在 60 秒倒數計時與 3 顆心失誤扣減的壓力下，團隊心情「${state.selectedFeeling}」！特別是看到如 5 或 8 這種看似很大的數字時需要冷靜驗算，連續答對時感到非常有信心！`;
+            const oridI = `我們深刻理解到：正方形要能完美密鋪長方形，邊長必須是長與寬的「公因數」；而邊長 ${chosen}×${chosen} ${chosen === 12 ? '作為「最大公因數」' : ''}，不僅達成零廢棄，更能大幅降低所需磁磚塊數，減少人工灌漿工錢，是最佳工程決策的數學核心！`;
+            const oridD = `未來若要替家中浴室或地板選購磁磚，我們會先精準測量地面的長與寬並計算「最大公因數」，優先挑選公因數尺寸以避免磁磚切割浪費，兼顧美觀與節省預算！`;
+
+            state.oridData = { O: oridO, R: oridR, I: oridI, D: oridD };
+
+            const pO = document.getElementById('previewOridO');
+            const pR = document.getElementById('previewOridR');
+            const pI = document.getElementById('previewOridI');
+            const pD = document.getElementById('previewOridD');
+
+            if (pO) pO.innerText = oridO;
+            if (pR) pR.innerText = oridR;
+            if (pI) pI.innerText = oridI;
+            if (pD) pD.innerText = oridD;
+        }
+
+        function endGameChallenge(reason) {
+            state.game.active = false;
+            if (state.game.timerId) {
+                clearInterval(state.game.timerId);
+                state.game.timerId = null;
+            }
+
+            document.getElementById('gamePlayingScreen').classList.add('hidden');
+            document.getElementById('gameOverScreen').classList.remove('hidden');
+
+            document.getElementById('finalGameScore').innerText = state.game.score;
+            document.getElementById('finalCorrectCount').innerText = state.game.correctCount;
+            document.getElementById('finalMistakeCount').innerText = `${state.game.mistakes} / 3`;
+
+            const iconBox = document.getElementById('gameOverIconBox');
+            const titleEl = document.getElementById('gameOverTitle');
+            const reasonEl = document.getElementById('gameOverReason');
+
+            if (reason === 'mistakes') {
+                iconBox.className = "w-20 h-20 bg-rose-100 text-rose-600 rounded-3xl flex items-center justify-center text-4xl mx-auto shadow-inner";
+                iconBox.innerHTML = '<i class="fa-solid fa-heart-crack"></i>';
+                titleEl.innerText = "挑戰終止！(累計答錯 3 次)";
+                reasonEl.innerText = "公因數需能同時整除長(36)與高(24)，系統已為貴隊統整 ORID 學習反思：";
+                showToast('答題失誤累積 3 次，挑戰已終止！', 'warning');
+            } else {
+                iconBox.className = "w-20 h-20 bg-amber-100 text-amber-600 rounded-3xl flex items-center justify-center text-4xl mx-auto shadow-inner";
+                iconBox.innerHTML = '<i class="fa-solid fa-trophy"></i>';
+                titleEl.innerText = "1分鐘時間到！挑戰完成！";
+                reasonEl.innerText = `太棒了！貴隊在 1 分鐘內奪得 ${state.game.score} 分！系統已為貴隊生成 ORID 學習反思：`;
+                showToast('🎉 恭喜完成 1 分鐘極速挑戰！', 'success');
+            }
+
+            synthesizeOridData();
+        }
+
+        function publishGameOridToShowcase() {
+            updateGroupIdentity();
+
+            if (!state.oridData || !state.oridData.O) {
+                synthesizeOridData();
+            }
+
+            const chosenSize = state.engineeringDecision || state.act2SelectedSize || 12;
+
+            const submissionRecord = {
+                id: Date.now(),
+                groupName: state.groupName,
+                trialCount: state.trialLogs.length,
+                gameScore: state.game.score,
+                correctCount: state.game.correctCount,
+                mistakes: state.game.mistakes,
+                engineeringChoice: chosenSize,
+                isOptimalChoice: chosenSize === 12,
+                orid: state.oridData,
+                likes: 0,
+                timestamp: new Date().toLocaleTimeString('zh-TW', { hour: '2-2-digit', minute: '2-2-digit' })
+            };
+
+            const existingIdx = state.showcaseData.findIndex(item => item.groupName === state.groupName);
+            if (existingIdx >= 0) {
+                submissionRecord.likes = state.showcaseData[existingIdx].likes || 0;
+                state.showcaseData[existingIdx] = submissionRecord;
+            } else {
+                state.showcaseData.unshift(submissionRecord);
+            }
+
+            saveDataToStorage(true);
+            renderShowcaseWall();
+            showToast(`🎉 太棒了！${state.groupName} 的 ORID 學習成果已成功發布在成果展示牆！`);
+
+            setTimeout(() => {
+                switchTab('act4');
+            }, 800);
+        }
+
+        // ==================== SHOWCASE GALLERY ====================
+        function renderShowcaseWall() {
+            const list = state.showcaseData;
+            const container = document.getElementById('showcaseCardsContainer');
+            const countBadge = document.getElementById('showcaseCountBadge');
+            
+            if (countBadge) countBadge.innerText = `${list.length}`;
+            
+            document.getElementById('statTotalSubmissions').innerText = `${list.length} 組`;
+            
+            if (list.length === 0) {
+                document.getElementById('statOptimalCount').innerText = '0 組';
+                document.getElementById('statAvgTrials').innerText = '0 次';
+                document.getElementById('statTotalLikes').innerText = '0 次';
+                container.innerHTML = `
+                    <div id="emptyShowcaseMsg" class="col-span-full bg-white border-2 border-dashed border-slate-300 rounded-3xl p-12 text-center text-slate-400 space-y-3">
+                        <i class="fa-solid fa-cloud-arrow-up text-5xl text-slate-300"></i>
+                        <p class="text-xl font-black text-slate-500">目前尚無小組提交作品</p>
+                        <p class="text-base text-slate-400">完成「挑戰賽：1分鐘速判」並點選發布，貴隊的 ORID 成果卡就會直接在此公開呈現喔！</p>
+                    </div>`;
+                return;
+            }
+
+            const optimalCount = list.filter(item => item.isOptimalChoice).length;
+            const totalTrials = list.reduce((acc, cur) => acc + (cur.trialCount || 0), 0);
+            const avgTrials = (totalTrials / list.length).toFixed(1);
+            const totalLikes = list.reduce((acc, cur) => acc + (cur.likes || 0), 0);
+
+            document.getElementById('statOptimalCount').innerText = `${optimalCount} 組`;
+            document.getElementById('statAvgTrials').innerText = `${avgTrials} 次`;
+            document.getElementById('statTotalLikes').innerText = `${totalLikes} 次`;
+
+            container.innerHTML = list.map((item, idx) => `
+                <div class="showcase-card bg-white rounded-3xl p-6 shadow-sm border-2 ${item.isOptimalChoice ? 'border-emerald-300 bg-emerald-50/20' : 'border-slate-200'} space-y-4 hover:shadow-md transition">
+                    <!-- Card Header -->
+                    <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                        <div class="flex items-center space-x-2.5">
+                            <span class="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-black text-lg">
+                                <i class="fa-solid fa-users"></i>
+                            </span>
+                            <div>
+                                <h3 class="text-2xl font-black text-slate-900 leading-tight">${escapeHtml(item.groupName)}</h3>
+                                <span class="text-xs text-slate-400 font-bold">發表時間：${escapeHtml(item.timestamp)}</span>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <span class="px-3 py-1 rounded-full text-sm font-black ${item.isOptimalChoice ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}">
+                                ${item.engineeringChoice}×${item.engineeringChoice} ${item.isOptimalChoice ? '★ 最佳解' : ''}
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Summary Stats Pill -->
+                    <div class="grid grid-cols-3 gap-2 bg-slate-50 p-2.5 rounded-xl text-xs md:text-sm font-extrabold text-slate-600 text-center">
+                        <div><i class="fa-solid fa-vial text-indigo-500 mr-1"></i>試鋪：${item.trialCount || 0} 次</div>
+                        <div><i class="fa-solid fa-ruler-combined text-amber-500 mr-1"></i>尺寸：${item.engineeringChoice}×${item.engineeringChoice}</div>
+                        <div><i class="fa-solid fa-stopwatch text-rose-500 mr-1"></i>挑戰：${item.gameScore || 0} 分</div>
+                    </div>
+
+                    <!-- ORID Content Section -->
+                    <div class="space-y-2.5 text-slate-700 text-base">
+                        <div class="bg-indigo-50/60 p-3 rounded-xl border border-indigo-100">
+                            <strong class="text-indigo-800 font-black mr-1">[O 客觀事實]</strong>
+                            <p class="mt-0.5 text-slate-800 font-medium">${escapeHtml(item.orid?.O || '無填寫')}</p>
+                        </div>
+                        <div class="bg-rose-50/60 p-3 rounded-xl border border-rose-100">
+                            <strong class="text-rose-800 font-black mr-1">[R 感性感受]</strong>
+                            <p class="mt-0.5 text-slate-800 font-medium">${escapeHtml(item.orid?.R || '無填寫')}</p>
+                        </div>
+                        <div class="bg-amber-50/60 p-3 rounded-xl border border-amber-100">
+                            <strong class="text-amber-800 font-black mr-1">[I 詮釋意義]</strong>
+                            <p class="mt-0.5 text-slate-800 font-medium">${escapeHtml(item.orid?.I || '無填寫')}</p>
+                        </div>
+                        <div class="bg-emerald-50/60 p-3 rounded-xl border border-emerald-100">
+                            <strong class="text-emerald-800 font-black mr-1">[D 決定行動]</strong>
+                            <p class="mt-0.5 text-slate-800 font-medium">${escapeHtml(item.orid?.D || '無填寫')}</p>
+                        </div>
+                    </div>
+
+                    <!-- Interaction Row: Like Button -->
+                    <div class="pt-2 flex items-center justify-between border-t border-slate-100">
+                        <span class="text-xs text-slate-400 font-bold">點讚給予裝修隊同儕讚賞：</span>
+                        <button onclick="likeShowcaseCard(${idx})" class="flex items-center space-x-1.5 px-4 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 font-black text-base border border-rose-200 transition transform active:scale-95">
+                            <i class="fa-solid fa-heart text-rose-500"></i>
+                            <span>讚</span>
+                            <span class="bg-rose-200 text-rose-800 px-2 py-0.5 rounded-full text-xs ml-1">${item.likes || 0}</span>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function likeShowcaseCard(idx) {
+            if (state.showcaseData[idx]) {
+                state.showcaseData[idx].likes = (state.showcaseData[idx].likes || 0) + 1;
+                saveDataToStorage(true);
+                renderShowcaseWall();
+                showToast(`❤️ 已給 ${state.showcaseData[idx].groupName} 送出一個讚！`);
+            }
+        }
+
+        // ==================== EXPORT AS IMAGE (PNG) ====================
+        function exportShowcaseImage() {
+            if (state.showcaseData.length === 0) {
+                showToast('展示牆尚無作品可供匯出圖檔！', 'warning');
+                return;
+            }
+
+            const exportBtn = document.getElementById('exportImgBtn');
+            const originalBtnText = exportBtn.innerHTML;
+            exportBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i>正在生成圖檔...';
+            exportBtn.disabled = true;
+
+            const targetElement = document.getElementById('showcaseCardsContainer');
+
+            if (typeof html2canvas !== 'undefined') {
+                html2canvas(targetElement, {
+                    scale: 2,
+                    useCORS: true,
+                    backgroundColor: "#f8fafc"
+                }).then(canvas => {
+                    const imgData = canvas.toDataURL("image/png");
+                    const link = document.createElement("a");
+                    link.download = `數感裝修隊_全班成果展示牆_${Date.now()}.png`;
+                    link.href = imgData;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+
+                    exportBtn.innerHTML = originalBtnText;
+                    exportBtn.disabled = false;
+                    showToast('🎉 成果展示牆圖片 (PNG) 已成功下載！');
+                }).catch(err => {
+                    console.error("html2canvas export error:", err);
+                    fallbackExportPNG();
+                    exportBtn.innerHTML = originalBtnText;
+                    exportBtn.disabled = false;
+                });
+            } else {
+                fallbackExportPNG();
+                exportBtn.innerHTML = originalBtnText;
+                exportBtn.disabled = false;
+            }
+        }
+
+        function fallbackExportPNG() {
+            // Native Canvas Fallback Render
+            const c = document.createElement('canvas');
+            c.width = 1200;
+            const rowHeight = 220;
+            c.height = 180 + state.showcaseData.length * rowHeight;
+            const ctx = c.getContext('2d');
+
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, c.width, c.height);
+
+            // Header Banner
+            ctx.fillStyle = '#4338ca';
+            ctx.fillRect(0, 0, c.width, 100);
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 36px sans-serif';
+            ctx.fillText('數感裝修隊：全班學習成果展示牆', 40, 60);
+
+            // Submissions
+            state.showcaseData.forEach((item, i) => {
+                const y = 130 + i * rowHeight;
+                ctx.fillStyle = '#f8fafc';
+                ctx.fillRect(30, y, 1140, 200);
+                ctx.strokeStyle = '#cbd5e1';
+                ctx.strokeRect(30, y, 1140, 200);
+
+                ctx.fillStyle = '#1e1b4b';
+                ctx.font = 'bold 24px sans-serif';
+                ctx.fillText(`${item.groupName}  |  決策：${item.engineeringChoice}×${item.engineeringChoice} ${item.isOptimalChoice ? '(★最佳解)' : ''}  |  試鋪：${item.trialCount}次  |  獲得讚數：${item.likes}`, 50, y + 40);
+
+                ctx.font = '18px sans-serif';
+                ctx.fillStyle = '#334155';
+                ctx.fillText(`[O 客觀] ${item.orid?.O?.substring(0, 55) || '無'}...`, 50, y + 75);
+                ctx.fillText(`[R 感性] ${item.orid?.R?.substring(0, 55) || '無'}...`, 50, y + 105);
+                ctx.fillText(`[I 詮釋] ${item.orid?.I?.substring(0, 55) || '無'}...`, 50, y + 135);
+                ctx.fillText(`[D 決定] ${item.orid?.D?.substring(0, 55) || '無'}...`, 50, y + 165);
+            });
+
+            const link = document.createElement('a');
+            link.download = `數感裝修隊_全班成果展示牆_${Date.now()}.png`;
+            link.href = c.toDataURL('image/png');
+            link.click();
+            showToast('成果圖片 (PNG) 已下載！');
+        }
+
+        function clearAllShowcaseData() {
+            state.showcaseData = [];
+            saveDataToStorage(true);
+            renderShowcaseWall();
+            showToast('已清空展示牆成果', 'info');
+        }
+
+        function toggleFullscreen() {
+            const doc = document;
+            const docEl = doc.documentElement;
+            const isFullscreen = doc.fullscreenElement || doc.webkitFullscreenElement;
+
+            try {
+                if (!isFullscreen) {
+                    if (docEl.requestFullscreen) {
+                        docEl.requestFullscreen().catch(() => {});
+                    } else if (docEl.webkitRequestFullscreen) {
+                        docEl.webkitRequestFullscreen();
+                    }
+                } else {
+                    if (doc.exitFullscreen) {
+                        doc.exitFullscreen().catch(() => {});
+                    } else if (doc.webkitExitFullscreen) {
+                        doc.webkitExitFullscreen();
+                    }
+                }
+            } catch (err) {
+                showToast('裝置或瀏覽器不支援全螢幕模式', 'info');
+            }
+        }
+
+        function generateQRCode() {
+            const qrContainer = document.getElementById("qrcode");
+            if (!qrContainer) return;
+            qrContainer.innerHTML = "";
+            const currentUrl = window.location.href;
+
+            try {
+                if (typeof QRCode !== 'undefined') {
+                    new QRCode(qrContainer, {
+                        text: currentUrl,
+                        width: 180,
+                        height: 180,
+                        colorDark: "#1e1b4b",
+                        colorLight: "#ffffff",
+                        correctLevel: QRCode.CorrectLevel.H
+                    });
+                } else {
+                    throw new Error("QRCode library not yet ready");
+                }
+            } catch (err) {
+                qrContainer.innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(currentUrl)}" alt="QR Code" class="w-[180px] h-[180px] rounded-lg shadow-sm" onerror="this.onerror=null;this.src='https://quickchart.io/qr?text=${encodeURIComponent(currentUrl)}&size=180';">`;
+            }
+        }
+
+        function copyCurrentURL() {
+            const url = window.location.href;
+            try {
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(url).then(() => {
+                        showToast('已複製網頁連結至剪貼簿！');
+                    }).catch(() => {
+                        fallbackCopy(url);
+                    });
+                } else {
+                    fallbackCopy(url);
+                }
+            } catch (e) {
+                fallbackCopy(url);
+            }
+        }
+
+        function fallbackCopy(text) {
+            const dummy = document.createElement('input');
+            document.body.appendChild(dummy);
+            dummy.value = text;
+            dummy.select();
+            document.execCommand('copy');
+            document.body.removeChild(dummy);
+            showToast('已複製網頁連結至剪貼簿！');
+        }
+
+        function openModal(id) {
+            const m = document.getElementById(id);
+            if (m) {
+                m.classList.remove('hidden');
+                if (id === 'qrModal') generateQRCode();
+            }
+        }
+
+        function closeModal(id) {
+            const m = document.getElementById(id);
+            if (m) m.classList.add('hidden');
+        }
+
+        function showToast(msg, type = 'success') {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toastMsg');
+            const toastIcon = document.getElementById('toastIcon');
+
+            toastMsg.innerText = msg;
+            if (type === 'error') {
+                toastIcon.className = 'fa-solid fa-circle-xmark text-rose-400 text-2xl';
+            } else if (type === 'warning') {
+                toastIcon.className = 'fa-solid fa-triangle-exclamation text-amber-400 text-2xl';
+            } else if (type === 'info') {
+                toastIcon.className = 'fa-solid fa-circle-info text-sky-400 text-2xl';
+            } else {
+                toastIcon.className = 'fa-solid fa-circle-check text-emerald-400 text-2xl';
+            }
+
+            toast.classList.remove('hidden');
+            setTimeout(() => toast.classList.add('hidden'), 3200);
+        }
+    </script>
+</body>
+</html>
